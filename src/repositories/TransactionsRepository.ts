@@ -6,6 +6,12 @@ interface Balance {
   total: number;
 }
 
+interface CreateRepositoryDTO {
+  title: string;
+  value: number;
+  type: 'income' | 'outcome';
+}
+
 class TransactionsRepository {
   private transactions: Transaction[];
 
@@ -14,15 +20,34 @@ class TransactionsRepository {
   }
 
   public all(): Transaction[] {
-    // TODO
+    return this.transactions;
   }
 
   public getBalance(): Balance {
-    // TODO
+    const outcome = this.transactions
+      .filter(transaction => transaction.type === 'outcome')
+      .reduce((total, transaction) => total + transaction.value, 0);
+    const income = this.transactions
+      .filter(transaction => transaction.type === 'income')
+      .reduce((total, transaction) => total + transaction.value, 0);
+    const total = income - outcome;
+    return {
+      outcome,
+      income,
+      total,
+    };
   }
 
-  public create(): Transaction {
-    // TODO
+  public create({ title, value, type }: CreateRepositoryDTO): Transaction {
+    const transaction = new Transaction({ title, value, type });
+
+    if (type === 'outcome' && value > this.getBalance().total) {
+      throw Error('This outcome went beyond the limit');
+    }
+
+    this.transactions.push(transaction);
+
+    return transaction;
   }
 }
 
